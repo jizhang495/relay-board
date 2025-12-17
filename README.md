@@ -4,6 +4,21 @@ App to control a 8-channel USB-RLY08C relay board. It controls the on/off state 
 
 The programme uses Python, tkinter for GUI, and uv for package management.
 
+## Setup and run
+
+1. Ensure [uv](https://docs.astral.sh/uv/) is installed.
+2. Install dependencies: `uv sync`
+3. Launch the app: `uv run python main.py`
+
+The app opens a Tkinter window. Pick the COM port for the USB-RLY08C, click **Connect**, tick the channels you want to act on, and use the per-channel toggle buttons or the **Turn Selected On/Off** buttons to drive the relays. Baud rate is set to 19200 as per the board datasheet.
+
+## Features
+
+- drop down selection of COM port for connecting to the relay board
+- selection of active channels (tickboxes)
+- on/off button for each channel (LabVIEW-like)
+- a on/off button for all selected channels
+
 ## About USB-RLY08C
 
 Datasheets of USB-RLY08C relay board can be found on: https://www.rapidonline.com/devantech-usb-rly08c-8-channel-2a-relay-board-controlled-via-usb-66-0338
