@@ -6,11 +6,33 @@ The programme uses Python, tkinter for GUI, and uv for package management.
 
 ## Setup and run
 
+### Using uv (recommended)
+
 1. Ensure [uv](https://docs.astral.sh/uv/) is installed.
 2. Install dependencies: `uv sync`
 3. Launch the app: `uv run python main.py`
 
 The app opens a Tkinter window. Pick the COM port for the USB-RLY08C, click **Connect**, tick the channels you want to act on, and use the per-channel toggle buttons or the **Turn Selected On/Off** buttons to drive the relays. Baud rate is set to 19200 as per the board datasheet.
+
+### Using pip
+
+1. Create and activate a virtual environment:
+   - Windows: `python -m venv .venv && .venv\Scripts\activate`
+   - macOS/Linux: `python -m venv .venv && source .venv/bin/activate`
+2. Install dependencies: `pip install -r requirements.txt`
+3. Launch the app: `python main.py`
+
+### Startup configuration
+
+The initial ticked channels are read from `config.json` (shipped with all channels enabled). Edit `config.json` before launching to choose which channels should start ticked, e.g.:
+
+```json
+{
+  "active_channels": [1, 2, 5, 6]
+}
+```
+
+Changes you make to the tickboxes in the UI are saved back to `config.json` on the fly and when closing the app.
 
 ## Features
 

@@ -1,6 +1,8 @@
+import json
+from pathlib import Path
 import tkinter as tk
 from tkinter import messagebox, ttk
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Set
 
 import serial
 from serial import SerialException
@@ -99,11 +101,15 @@ class RelayBoardApp:
         self.root.title("USB-RLY08C Control")
 
         self.controller = RelayBoardController()
+        self.config_path = Path(__file__).with_name("config.json")
 
         self.port_var = tk.StringVar()
         self.status_var = tk.StringVar(value="Disconnected")
 
-        self.active_vars: List[tk.BooleanVar] = [tk.BooleanVar(value=True) for _ in range(8)]
+        startup_active = self._load_active_channels()
+        self.active_vars: List[tk.BooleanVar] = [
+            tk.BooleanVar(value=(idx + 1) in startup_active) for idx in range(8)
+        ]
         self.state_vars: List[tk.BooleanVar] = [tk.BooleanVar(value=False) for _ in range(8)]
         self.toggle_buttons: List[ttk.Button] = []
 
@@ -145,6 +151,7 @@ class RelayBoardApp:
                 relays,
                 text=f"Relay {idx + 1}",
                 variable=self.active_vars[idx],
+                command=self._save_active_channels,
             )
             active.grid(row=row, column=col_offset, sticky="w", pady=4)
 
@@ -266,7 +273,34 @@ class RelayBoardApp:
 
     def on_close(self) -> None:
         self.controller.close()
+        self._save_active_channels()
         self.root.destroy()
+
+    def _load_active_channels(self) -> Set[int]:
+        default = set(range(1, 9))
+        if not self.config_path.exists():
+            return default
+
+        try:
+            data = json.loads(self.config_path.read_text())
+        except (OSError, json.JSONDecodeError):
+            return default
+
+        channels = data.get("active_channels")
+        if not isinstance(channels, list):
+            return default
+
+        filtered = {c for c in channels if isinstance(c, int) and 1 <= c <= 8}
+        return filtered or default
+
+    def _save_active_channels(self) -> None:
+        data = {
+            "active_channels": [idx + 1 for idx, var in enumerate(self.active_vars) if var.get()],
+        }
+        try:
+            self.config_path.write_text(json.dumps(data, indent=2))
+        except OSError:
+            messagebox.showwarning("Save Failed", f"Could not write {self.config_path.name}.")
 
 
 def main() -> None:
