@@ -1,1 +1,2 @@
+# PyPI dependencies only. Tkinter ships with Python.
 pyserial

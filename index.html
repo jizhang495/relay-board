@@ -1,0 +1,761 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>USB-RLY08C Control</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f7f9;
+        --panel: #ffffff;
+        --text: #1d252d;
+        --muted: #66717c;
+        --border: #d8dde3;
+        --accent: #0f766e;
+        --accent-strong: #0b5f59;
+        --warn: #b45309;
+        --danger: #b42318;
+        --off: #6b7280;
+        --shadow: 0 12px 28px rgba(25, 32, 38, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      button {
+        min-height: 42px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--panel);
+        color: var(--text);
+        cursor: pointer;
+        padding: 0 14px;
+      }
+
+      button:hover:not(:disabled) {
+        border-color: #aab4bf;
+        background: #fbfcfd;
+      }
+
+      button:focus-visible,
+      input:focus-visible {
+        outline: 3px solid rgba(15, 118, 110, 0.24);
+        outline-offset: 2px;
+      }
+
+      button:disabled {
+        color: #9aa3ad;
+        cursor: not-allowed;
+      }
+
+      .primary {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #ffffff;
+      }
+
+      .primary:hover:not(:disabled) {
+        border-color: var(--accent-strong);
+        background: var(--accent-strong);
+      }
+
+      .app {
+        width: min(1120px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 28px 0 36px;
+      }
+
+      .topbar,
+      .toolbar,
+      .log-panel {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 20px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 24px;
+        line-height: 1.2;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 16px;
+        line-height: 1.3;
+      }
+
+      .detail {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .connection {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 36px;
+        padding: 0 12px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--off);
+      }
+
+      .dot.connected {
+        background: var(--accent);
+      }
+
+      .dot.error {
+        background: var(--danger);
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+        padding: 14px;
+      }
+
+      .toolbar-divider {
+        width: 1px;
+        min-height: 42px;
+        background: var(--border);
+        margin: 0 2px;
+      }
+
+      .relay-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .relay-card {
+        min-height: 138px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+        padding: 14px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .relay-card.on {
+        border-color: rgba(15, 118, 110, 0.48);
+      }
+
+      .relay-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .badge {
+        min-width: 48px;
+        border-radius: 999px;
+        padding: 4px 10px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 700;
+        color: #ffffff;
+        background: var(--off);
+      }
+
+      .badge.on {
+        background: var(--accent);
+      }
+
+      .relay-actions {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .active-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        min-height: 42px;
+      }
+
+      .active-toggle input {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent);
+      }
+
+      .log-panel {
+        margin-top: 16px;
+        padding: 16px;
+      }
+
+      .log-panel h2 {
+        margin-bottom: 10px;
+      }
+
+      .event-log {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .event-log li.error {
+        color: var(--danger);
+      }
+
+      .event-log li.warn {
+        color: var(--warn);
+      }
+
+      @media (max-width: 680px) {
+        body {
+          overflow-x: hidden;
+        }
+
+        .app {
+          width: min(1120px, calc(100vw - 20px));
+          padding-top: 10px;
+        }
+
+        .topbar {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .connection {
+          white-space: normal;
+        }
+
+        .toolbar {
+          display: grid;
+          grid-template-columns: 1fr;
+        }
+
+        .toolbar button {
+          width: 100%;
+          min-width: 0;
+        }
+
+        .toolbar-divider {
+          display: none;
+        }
+
+        .relay-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .relay-head {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .relay-actions {
+          grid-template-columns: 1fr;
+        }
+
+        .relay-actions button {
+          width: 100%;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .app {
+          margin-left: 10px;
+          margin-right: 10px;
+          width: min(360px, calc(100vw - 20px));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div>
+          <h1>USB-RLY08C Control</h1>
+          <p class="detail" id="connectionDetail">No board connected</p>
+        </div>
+        <div class="connection" aria-live="polite">
+          <span class="dot" id="statusDot"></span>
+          <span id="connectionStatus">Disconnected</span>
+        </div>
+      </header>
+
+      <nav class="toolbar" aria-label="Relay board controls">
+        <button class="primary" id="connectButton" type="button">Connect</button>
+        <button id="readButton" type="button" disabled>Read States</button>
+        <span class="toolbar-divider" aria-hidden="true"></span>
+        <button id="selectedOnButton" type="button" disabled>Selected On</button>
+        <button id="selectedOffButton" type="button" disabled>Selected Off</button>
+      </nav>
+
+      <section class="relay-grid" id="relayGrid" aria-label="Relay channels"></section>
+
+      <section class="log-panel" aria-label="Status log">
+        <h2>Status</h2>
+        <ol class="event-log" id="eventLog" aria-live="polite"></ol>
+      </section>
+    </main>
+
+    <script>
+      (() => {
+        "use strict";
+
+        const BAUD_RATE = 19200;
+        const READ_TIMEOUT_MS = 1000;
+        const GET_STATES_CMD = 0x5b;
+        const SET_STATES_CMD = 0x5c;
+        const ACTIVE_STORAGE_KEY = "relay-board-active-channels";
+
+        const relayGrid = document.getElementById("relayGrid");
+        const eventLog = document.getElementById("eventLog");
+        const connectButton = document.getElementById("connectButton");
+        const readButton = document.getElementById("readButton");
+        const selectedOnButton = document.getElementById("selectedOnButton");
+        const selectedOffButton = document.getElementById("selectedOffButton");
+        const connectionStatus = document.getElementById("connectionStatus");
+        const connectionDetail = document.getElementById("connectionDetail");
+        const statusDot = document.getElementById("statusDot");
+
+        let port = null;
+        let writer = null;
+        let reader = null;
+        let readLoopDone = null;
+        let connected = false;
+        let busy = false;
+        let relayState = 0;
+        let rxBuffer = [];
+        let pendingReads = [];
+        let activeChannels = loadActiveChannels();
+
+        function serialSupported() {
+          return "serial" in navigator && window.isSecureContext;
+        }
+
+        function loadActiveChannels() {
+          const defaults = new Set(Array.from({ length: 8 }, (_, index) => index + 1));
+          const raw = localStorage.getItem(ACTIVE_STORAGE_KEY);
+          if (raw === null) {
+            return defaults;
+          }
+
+          try {
+            const parsed = JSON.parse(raw);
+            if (!Array.isArray(parsed)) {
+              return defaults;
+            }
+            return new Set(parsed.filter((channel) => Number.isInteger(channel) && channel >= 1 && channel <= 8));
+          } catch {
+            return defaults;
+          }
+        }
+
+        function saveActiveChannels() {
+          const channels = [...activeChannels].sort((a, b) => a - b);
+          localStorage.setItem(ACTIVE_STORAGE_KEY, JSON.stringify(channels));
+        }
+
+        function setStatus(label, tone, detail) {
+          connectionStatus.textContent = label;
+          connectionDetail.textContent = detail;
+          statusDot.className = "dot";
+          if (tone) {
+            statusDot.classList.add(tone);
+          }
+        }
+
+        function log(message, type = "info") {
+          const item = document.createElement("li");
+          if (type !== "info") {
+            item.className = type;
+          }
+          const time = new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          });
+          item.textContent = `${time} ${message}`;
+          eventLog.prepend(item);
+
+          while (eventLog.children.length > 8) {
+            eventLog.lastElementChild.remove();
+          }
+        }
+
+        function errorMessage(error) {
+          if (error && error.name === "NotFoundError") {
+            return "No port selected.";
+          }
+          return error && error.message ? error.message : String(error);
+        }
+
+        function logError(prefix, error) {
+          log(`${prefix}: ${errorMessage(error)}`, "error");
+        }
+
+        function formatState(state) {
+          return state.toString(2).padStart(8, "0");
+        }
+
+        function selectedCount() {
+          return activeChannels.size;
+        }
+
+        function renderControls() {
+          const supported = serialSupported();
+          connectButton.disabled = busy || (!supported && !connected);
+          connectButton.textContent = connected ? "Disconnect" : "Connect";
+          readButton.disabled = !connected || busy;
+          selectedOnButton.disabled = !connected || busy || selectedCount() === 0;
+          selectedOffButton.disabled = !connected || busy || selectedCount() === 0;
+
+          if (!supported) {
+            setStatus("Unsupported browser", "error", "Use Chrome or Edge with a localhost URL.");
+          } else if (!connected) {
+            setStatus("Disconnected", "", "No board connected");
+          }
+        }
+
+        function renderRelays() {
+          relayGrid.replaceChildren();
+
+          for (let channel = 1; channel <= 8; channel += 1) {
+            const mask = 1 << (channel - 1);
+            const on = Boolean(relayState & mask);
+
+            const card = document.createElement("article");
+            card.className = `relay-card${on ? " on" : ""}`;
+
+            const head = document.createElement("div");
+            head.className = "relay-head";
+
+            const title = document.createElement("h2");
+            title.textContent = `Relay ${channel}`;
+
+            const badge = document.createElement("span");
+            badge.className = `badge${on ? " on" : ""}`;
+            badge.textContent = on ? "ON" : "OFF";
+
+            head.append(title, badge);
+
+            const actions = document.createElement("div");
+            actions.className = "relay-actions";
+
+            const activeLabel = document.createElement("label");
+            activeLabel.className = "active-toggle";
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.checked = activeChannels.has(channel);
+            checkbox.addEventListener("change", () => {
+              if (checkbox.checked) {
+                activeChannels.add(channel);
+              } else {
+                activeChannels.delete(channel);
+              }
+              saveActiveChannels();
+              renderControls();
+            });
+
+            const activeText = document.createElement("span");
+            activeText.textContent = "Active";
+            activeLabel.append(checkbox, activeText);
+
+            const toggleButton = document.createElement("button");
+            toggleButton.type = "button";
+            toggleButton.textContent = on ? "Turn Off" : "Turn On";
+            toggleButton.disabled = !connected || busy;
+            toggleButton.setAttribute("aria-pressed", String(on));
+            toggleButton.addEventListener("click", () => {
+              runOperation(async () => {
+                const nextState = on ? relayState & ~mask : relayState | mask;
+                await writeRelayState(nextState);
+              });
+            });
+
+            actions.append(activeLabel, toggleButton);
+            card.append(head, actions);
+            relayGrid.append(card);
+          }
+        }
+
+        function receiveBytes(bytes) {
+          for (const byte of bytes) {
+            const pending = pendingReads.shift();
+            if (pending) {
+              clearTimeout(pending.timer);
+              pending.resolve(byte);
+            } else {
+              rxBuffer.push(byte);
+            }
+          }
+        }
+
+        async function startReadLoop() {
+          readLoopDone = (async () => {
+            while (connected && port && port.readable) {
+              reader = port.readable.getReader();
+              try {
+                while (connected) {
+                  const { value, done } = await reader.read();
+                  if (done) {
+                    break;
+                  }
+                  if (value) {
+                    receiveBytes(value);
+                  }
+                }
+              } catch (error) {
+                if (connected) {
+                  logError("Read failed", error);
+                }
+              } finally {
+                reader.releaseLock();
+                reader = null;
+              }
+            }
+          })();
+        }
+
+        function readByte() {
+          if (rxBuffer.length > 0) {
+            return Promise.resolve(rxBuffer.shift());
+          }
+
+          return new Promise((resolve, reject) => {
+            const pending = {
+              resolve,
+              reject,
+              timer: window.setTimeout(() => {
+                const index = pendingReads.indexOf(pending);
+                if (index !== -1) {
+                  pendingReads.splice(index, 1);
+                }
+                reject(new Error("No response from relay board."));
+              }, READ_TIMEOUT_MS),
+            };
+            pendingReads.push(pending);
+          });
+        }
+
+        function rejectPendingReads(error) {
+          for (const pending of pendingReads.splice(0)) {
+            clearTimeout(pending.timer);
+            pending.reject(error);
+          }
+          rxBuffer = [];
+        }
+
+        async function sendBytes(bytes) {
+          if (!writer) {
+            throw new Error("Relay board is not connected.");
+          }
+          await writer.write(Uint8Array.from(bytes));
+        }
+
+        async function readRelayState() {
+          rxBuffer = [];
+          await sendBytes([GET_STATES_CMD]);
+          relayState = await readByte();
+          renderRelays();
+          log(`State ${formatState(relayState)} read.`);
+        }
+
+        async function writeRelayState(nextState) {
+          const state = nextState & 0xff;
+          await sendBytes([SET_STATES_CMD, state]);
+          relayState = state;
+          renderRelays();
+          log(`State ${formatState(relayState)} written.`);
+        }
+
+        async function runOperation(operation) {
+          if (!connected || busy) {
+            return;
+          }
+
+          busy = true;
+          renderControls();
+          renderRelays();
+
+          try {
+            await operation();
+          } catch (error) {
+            logError("Operation failed", error);
+          } finally {
+            busy = false;
+            renderControls();
+            renderRelays();
+          }
+        }
+
+        function describePort(selectedPort) {
+          const info = selectedPort.getInfo();
+          if (info.usbVendorId && info.usbProductId) {
+            const vendor = info.usbVendorId.toString(16).padStart(4, "0");
+            const product = info.usbProductId.toString(16).padStart(4, "0");
+            return `USB ${vendor}:${product}, ${BAUD_RATE} baud`;
+          }
+          return `Serial port, ${BAUD_RATE} baud`;
+        }
+
+        async function connect() {
+          if (!serialSupported()) {
+            log("Web Serial is unavailable in this browser.", "error");
+            return;
+          }
+
+          busy = true;
+          renderControls();
+          renderRelays();
+
+          try {
+            port = await navigator.serial.requestPort();
+            await port.open({
+              baudRate: BAUD_RATE,
+              dataBits: 8,
+              stopBits: 1,
+              parity: "none",
+              flowControl: "none",
+            });
+            writer = port.writable.getWriter();
+            connected = true;
+            await startReadLoop();
+            setStatus("Connected", "connected", describePort(port));
+            log("Connected.");
+            try {
+              await readRelayState();
+            } catch (error) {
+              logError("Read failed", error);
+            }
+          } catch (error) {
+            await disconnect(true);
+            logError("Connection failed", error);
+          } finally {
+            busy = false;
+            renderControls();
+            renderRelays();
+          }
+        }
+
+        async function disconnect(silent = false) {
+          const wasConnected = connected;
+          connected = false;
+          rejectPendingReads(new Error("Disconnected."));
+
+          if (reader) {
+            await reader.cancel().catch(() => {});
+          }
+          if (readLoopDone) {
+            await readLoopDone.catch(() => {});
+            readLoopDone = null;
+          }
+          if (writer) {
+            writer.releaseLock();
+            writer = null;
+          }
+          if (port) {
+            await port.close().catch(() => {});
+            port = null;
+          }
+
+          if (wasConnected && !silent) {
+            log("Disconnected.");
+          }
+          renderControls();
+          renderRelays();
+        }
+
+        function setSelected(on) {
+          runOperation(async () => {
+            if (activeChannels.size === 0) {
+              log("No active channels selected.", "warn");
+              return;
+            }
+
+            let nextState = relayState;
+            for (const channel of activeChannels) {
+              const mask = 1 << (channel - 1);
+              nextState = on ? nextState | mask : nextState & ~mask;
+            }
+            await writeRelayState(nextState);
+          });
+        }
+
+        connectButton.addEventListener("click", () => {
+          if (connected) {
+            disconnect();
+          } else {
+            connect();
+          }
+        });
+        readButton.addEventListener("click", () => runOperation(readRelayState));
+        selectedOnButton.addEventListener("click", () => setSelected(true));
+        selectedOffButton.addEventListener("click", () => setSelected(false));
+
+        if ("serial" in navigator) {
+          navigator.serial.addEventListener("disconnect", (event) => {
+            if (event.target === port) {
+              disconnect();
+            }
+          });
+        }
+
+        window.addEventListener("beforeunload", () => {
+          if (connected) {
+            disconnect(true);
+          }
+        });
+
+        renderRelays();
+        renderControls();
+        if (serialSupported()) {
+          log("Ready.");
+        } else {
+          log("Web Serial is unavailable.", "error");
+        }
+      })();
+    </script>
+  </body>
+</html>

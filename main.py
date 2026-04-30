@@ -1,8 +1,17 @@
 import json
 from pathlib import Path
-import tkinter as tk
-from tkinter import messagebox, ttk
 from typing import Iterable, List, Optional, Set
+
+try:
+    import tkinter as tk
+    from tkinter import messagebox, ttk
+except ModuleNotFoundError as exc:
+    if exc.name != "tkinter":
+        raise
+    raise SystemExit(
+        "Tkinter is not available in this Python installation. On Debian/Ubuntu, "
+        "install it with: sudo apt install python3-tk"
+    ) from exc
 
 import serial
 from serial import SerialException

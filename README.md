@@ -1,18 +1,16 @@
 # Relay Board Control App
 
-App to control a 8-channel USB-RLY08C relay board. It controls the on/off state of each channel. 
+App to control an 8-channel USB-RLY08C relay board. It includes both a Python desktop app and a browser-based Web Serial prototype.
 
-The programme uses Python, tkinter for GUI, and uv for package management.
+## Python desktop app
 
-## Setup and run
+The Python app uses Tkinter for the GUI and pyserial for serial communication.
 
-### Using uv (recommended)
+### Using uv
 
 1. Ensure [uv](https://docs.astral.sh/uv/) is installed.
 2. Install dependencies: `uv sync`
 3. Launch the app: `uv run python main.py`
-
-The app opens a Tkinter window. Pick the COM port for the USB-RLY08C, click **Connect**, tick the channels you want to act on, and use the per-channel toggle buttons or the **Turn Selected On/Off** buttons to drive the relays. Baud rate is set to 19200 as per the board datasheet.
 
 ### Using pip
 
@@ -22,7 +20,11 @@ The app opens a Tkinter window. Pick the COM port for the USB-RLY08C, click **Co
 2. Install dependencies: `pip install -r requirements.txt`
 3. Launch the app: `python main.py`
 
-### Startup configuration
+The app opens a Tkinter window. Pick the COM port for the USB-RLY08C, click **Connect**, tick the channels you want to act on, and use the per-channel toggle buttons or the **Turn Selected On/Off** buttons to drive the relays. Baud rate is set to 19200 as per the board datasheet.
+
+Linux note: if Python was installed without Tkinter support, install your distro's Tk package, e.g. `sudo apt install python3-tk`.
+
+### Python startup configuration
 
 The initial ticked channels are read from `config.json` (shipped with all channels enabled). Edit `config.json` before launching to choose which channels should start ticked, e.g.:
 
@@ -34,12 +36,30 @@ The initial ticked channels are read from `config.json` (shipped with all channe
 
 Changes you make to the tickboxes in the UI are saved back to `config.json` on the fly and when closing the app.
 
+## Browser Web Serial prototype
+
+The browser app is in `index.html`. It does not use Python for serial control; JavaScript talks directly to the board through the Web Serial API.
+
+Use a Chromium-based browser such as Chrome or Edge.
+
+1. Start a local static server:
+
+   ```bash
+   python3 -m http.server 8000
+   ```
+
+2. Open `http://localhost:8000`.
+3. Click **Connect** and choose the USB-RLY08C serial port.
+
+If port 8000 is already in use, choose another port and open that URL instead. Active relay selections are saved in the browser.
+
 ## Features
 
-- drop down selection of COM port for connecting to the relay board
+- serial connection to the relay board
 - selection of active channels (tickboxes)
-- on/off button for each channel (LabVIEW-like)
-- a on/off button for all selected channels
+- on/off button for each channel
+- on/off buttons for all selected channels
+- relay state readback
 
 ## About USB-RLY08C
 
